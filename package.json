@@ -1,0 +1,27 @@
+{
+  "name": "twitter-assistant",
+  "version": "1.0.0",
+  "description": "Command line interface for scheduling Tweets",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Twitter",
+    "CLI"
+  ],
+  "author": "Rob Gleeson <robbie.gleeson@gmail.com> (http://robbiegleeson.github.io/)",
+  "license": "ISC",
+  "bin": {
+    "tweet": "./index.js"
+  },
+  "dependencies": {
+    "co": "^4.6.0",
+    "co-prompt": "^1.0.0",
+    "colors": "^1.1.2",
+    "commander": "^2.9.0",
+    "lowdb": "^0.16.2",
+    "prompt": "^1.0.0",
+    "twitter": "^1.7.0"
+  }
+}
