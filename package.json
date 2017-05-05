@@ -1,11 +1,8 @@
 {
   "name": "twitter-assistant",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Command line interface for scheduling Tweets",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "keywords": [
     "Twitter",
     "CLI"
@@ -16,12 +13,22 @@
     "tweet": "./index.js"
   },
   "dependencies": {
+    "background-process": "^0.1.0",
     "co": "^4.6.0",
     "co-prompt": "^1.0.0",
     "colors": "^1.1.2",
+    "command-line-args": "^4.0.4",
     "commander": "^2.9.0",
+    "fs-path": "0.0.23",
+    "install": "^0.10.1",
     "lowdb": "^0.16.2",
+    "node-notifier": "^5.1.2",
+    "npm": "^4.6.1",
+    "opn": "^5.0.0",
+    "path": "^0.12.7",
     "prompt": "^1.0.0",
+    "querystring": "^0.2.0",
+    "request": "^2.81.0",
     "twitter": "^1.7.0"
   }
 }
