@@ -4,7 +4,7 @@
   "description": "Command line interface for scheduling Tweets",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "twit-run": "node ./twitter/index.js"
   },
   "keywords": [
     "Twitter",
@@ -16,6 +16,7 @@
     "tweet": "./index.js"
   },
   "dependencies": {
+    "background-process": "^0.1.0",
     "co": "^4.6.0",
     "co-prompt": "^1.0.0",
     "colors": "^1.1.2",

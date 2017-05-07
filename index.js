@@ -6,29 +6,72 @@ const low = require('lowdb');
 const db = low('db.json')
 const colors = require('colors');
 const Twitter = require('twitter');
+const cp = require('child_process');
+const fs = require('fs');
 
-function startTwitterAssistant() {
-    console.log('Starting Twitter Assistant'.green);
-    const client = getTwitterClient();
+const background = require('background-process');
 
-    const processId = checkForScheduledTweets();
+const executables = {
+    twitter: 'twitter/index.js',
+};
 
-}
+twitterProcesses = {};
 
-function getTwitterClient() {
+function startTwitterAssistant(username) {
+    console.log('starting...');
     const config = db.get('config')
                       .find({ id: 1 })
                       .value()
 
-    const client = new Twitter({
-        consumer_key: config.consumerKey,
-        consumer_secret: config.consumerSecret,
-        access_token_key: config.accessToken,
-        access_token_secret: config.accessTokenSecret
-    });
+    if (config['id'] !== 1) {
+        console.log('App not configured. Run twitter config to set up configuration'.red);
+        return;
+    }
 
-    return client;
+    if ((username in twitterProcesses)) {
+        log.error('App is already running!'.blue);
+        return;
+    }
+
+    var stdout = fs.openSync('stdout.txt', 'a');
+    var stderr = fs.openSync('stderr.txt', 'a');
+
+    const options = {
+        consumerKey: config.consumerKey,
+        consumerSecret: config.consumerSecret,
+        accessToken: config.accessToken,
+        accessTokenSecret: config.accessTokenSecret,
+        stdio: [stdout, stderr]
+    };
+
+    background.start('twitter/index.js', options);
+
+    // let child = cp.fork('twitter/index.js', [
+    //     config.consumerKey,
+    //     config.consumerSecret,
+    //     config.accessToken,
+    //     config.accessTokenSecret
+    // ]);
+    //
+    // twitterProcesses[username] = child.pid;
+    //
+    // child.on('close', (code) => {
+    //     console.log(`child process exited with code ${code}`);
+    // });
+    //
+    // child.on('error', (code) => {
+    //     console.log(`Child process exited with code ${code}`);
+    // });
+
+    return;
 }
+
+program
+    .command('start')
+    .description('Start the scheduler')
+    .action(function () {
+        startTwitterAssistant('robbiegleeson');
+    });
 
 program
     .command('show')
@@ -43,14 +86,23 @@ program
     .description('Configure Twitter details')
     .action(function() {
         co(function *() {
+            const config = db.get('config')
+                              .find({ id: 1 })
+                              .value()
+
+            if (config && config['id'] === 1) {
+                console.log('App already configured. Run twitter reset to clear configuration settings'.red);
+                return;
+            }
+
+            db.defaults({ config: [], tweets: [] })
+              .write()
+
             const screenName = yield prompt('Twitter screen name: '.yellow);
             const consumerKey = yield prompt('Consumer Key: '.yellow);
             const consumerSecret = yield prompt('Consumer Secret: '.yellow);
             const accessToken = yield prompt('Access Token: '.yellow);
             const accessTokenSecret = yield prompt('Access Token Secret: '.yellow);
-
-            db.defaults({ config: [] })
-              .write()
 
             var success = db.get('config')
                 .push({
@@ -65,7 +117,7 @@ program
 
             if (success) {
                 console.log('Your configuration settings have been saved.'.green);
-                startTwitterAssistant();
+                return;
             }
 
         }).catch((err) => {
