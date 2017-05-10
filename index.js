@@ -9,9 +9,8 @@ const cp = require('child_process');
 const fs = require('fs');
 const commandLineArgs = require('command-line-args');
 const background = require('background-process');
-
-const stdout = fs.openSync(process.env.HOME + '/logs/log.txt', 'a');
-const stderr = fs.openSync(process.env.HOME + '/logs/error.txt', 'a');
+const stdout = fs.openSync('logs/log.txt', 'a');
+const stderr = fs.openSync('logs/error.txt', 'a');
 
 const dbFile = process.env.HOME + '/db.json';
 const db = low(dbFile);
@@ -21,7 +20,6 @@ const executables = {
 };
 
 function startTwitterAssistant(username) {
-    console.log('starting...');
     const config = db.get('config')
                       .find({ id: 1 })
                       .value()
@@ -36,13 +34,15 @@ function startTwitterAssistant(username) {
         consumerSecret: config.consumerSecret,
         accessToken: config.accessToken,
         accessTokenSecret: config.accessTokenSecret,
-        stdio: [stdout, stderr]
+        stdio: [stdout, stderr],
+        interval: config.interval,
     };
 
     const pId = background.start('twitter/index.js', options);
-    console.log(pId);
 
     var  update = db.get('config').find({id: 1}).assign({pId: pId}).write();
+
+    console.log('Scheduler started'.green);
 }
 
 program
@@ -56,25 +56,34 @@ program
     .command('stop')
     .description('Stop the scheduler')
     .action(function () {
-        const config = db.get('config')
-                          .find({ id: 1 })
-                          .value()
+        try {
+            const config = db.get('config')
+                              .find({ id: 1 })
+                              .value()
 
-        if (config['id'] === 1) {
-            process.kill(parseInt(config['pId']));
-            console.log('Process stopped'.green);
-            process.exit();
-        } else {
+            if (config['id'] === 1) {
+                process.kill(parseInt(config['pId']));
+                console.log('Process stopped'.green);
+                process.exit();
+            }
+        } catch (e) {
             console.log('No process exists!'.red);
         }
-
     });
 
 program
     .command('show')
     .description('Show scheduled Tweets')
     .action(function () {
-        // TODO: show scheduled tweets
+        const tweets = db.get('tweets')
+                          .value()
+
+        for (var i = 0; i < tweets.length; i++) {
+            const tweet = tweets[i];
+            console.log('Tweet: '.yellow + `${tweet.text}`);
+            console.log('Scheduled Date: '.yellow + `${tweet.date} @ ${tweet.time}`);
+            console.log('Status: '.yellow + `${tweet.status}\n\n`);
+        }
     });
 
 program
@@ -83,6 +92,7 @@ program
     .action(function (){
         co(function *() {
             let content;
+            var regex = /^[0-9]{2}[\/][0-9]{2}[\/][0-9]{4}$/g;
 
             content = yield prompt('What do you want to tweet?: '.yellow);
             if (content.length > 140) {
@@ -90,6 +100,12 @@ program
             }
 
             const date = yield prompt('What date do you want to tweet?: (dd/mm/yyyy) '.yellow);
+
+            if (!regex.test(date)) {
+                console.log('Malformed date. Please enter date as dd/mm/yyyy'.red);
+                process.exit(0);
+            }
+
             const time = yield prompt('What time do you want to tweet?: (hh:mm) '.yellow);
 
             db.get('tweets')
@@ -123,13 +139,11 @@ program
             db.defaults({ config: [], tweets: [] })
               .write()
 
-            fs.openSync(process.env.HOME + '/logs/logs.txt', 'a');
-            fs.openSync(process.env.HOME + '/logs/error.txt', 'a');
-
             const consumerKey = yield prompt('Consumer Key: '.yellow);
             const consumerSecret = yield prompt('Consumer Secret: '.yellow);
             const accessToken = yield prompt('Access Token: '.yellow);
             const accessTokenSecret = yield prompt('Access Token Secret: '.yellow);
+            const interval = yield prompt('Enter the scheduler intervel in minutes: '.yellow)
 
             var success = db.get('config')
                 .push({
@@ -138,12 +152,13 @@ program
                     consumerSecret: consumerSecret,
                     accessToken: accessToken,
                     accessTokenSecret: accessTokenSecret,
+                    interval: interval,
                 })
                 .write();
 
             if (success) {
                 console.log('Your configuration settings have been saved.'.green);
-                return;
+                process.exit(0);
             }
 
         }).catch((err) => {

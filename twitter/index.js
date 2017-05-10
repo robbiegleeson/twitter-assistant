@@ -18,6 +18,7 @@ background.ready(function(err, options) {
             const consumerSecret = options.consumerSecret;
             const accessToken = options.accessToken;
             const accessTokenSecret = options.accessTokenSecret;
+            const interval = parseInt(options.interval) * 60 * 1000|| 60000;
 
             const client = getTwitterClient({
                 consumerKey,
@@ -26,7 +27,6 @@ background.ready(function(err, options) {
                 accessTokenSecret
             });
 
-            console.log(`Procesing ${tweets.length} tweets`);
             for (var i = 0; i < tweets.length; i++) {
                 const tweet = tweets[i];
                 const tweetDate = tweet.date;
@@ -50,7 +50,7 @@ background.ready(function(err, options) {
                 }
             }
 
-            setTimeout(checkForScheduledTweets, 60000);
+            setTimeout(checkForScheduledTweets, interval);
         }
 
         function createDateObject(date, time) {
@@ -79,9 +79,7 @@ background.ready(function(err, options) {
             return client;
         }
     } catch (e) {
-        console.log(e);
-    } finally {
-
+        console.log('Process Error: ', e);
     }
 
     checkForScheduledTweets();
