@@ -20,7 +20,7 @@ background.ready(function(err, options) {
             const accessTokenSecret = options.accessTokenSecret;
             const interval = parseInt(options.interval) * 60 * 1000|| 60000;
 
-            const client = getTwitterClient({
+            var client = getTwitterClient({
                 consumerKey,
                 consumerSecret,
                 accessToken,
@@ -36,7 +36,6 @@ background.ready(function(err, options) {
                 const dateNow = new Date();
 
                 if (scheduledDate.getTime() <= dateNow.getTime()) {
-                    console.log(`Tweet with text ${tweet.text} is being published`);
                     var params = {status: tweet.text};
                     client.post('statuses/update', params, function(error, tweet, response) {
                         if (error) {
@@ -45,7 +44,10 @@ background.ready(function(err, options) {
                         }
                     });
 
-                    db.get('tweets').find({text: tweet.text}).assign({status: 'published'}).write();
+                    db.get('tweets')
+                        .find({text: tweet.text})
+                        .assign({status: 'published'})
+                        .write();
 
                 }
             }
