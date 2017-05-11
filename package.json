@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "description": "Command line interface for scheduling Tweets",
   "main": "index.js",
-  "scripts": {
-    "twit-run": "node ./twitter/index.js"
-  },
   "keywords": [
     "Twitter",
     "CLI"

@@ -5,18 +5,13 @@ const prompt = require('co-prompt');
 const low = require('lowdb');
 const colors = require('colors');
 const Twitter = require('twitter');
-const cp = require('child_process');
 const fs = require('fs');
-const commandLineArgs = require('command-line-args');
 const background = require('background-process');
 const fsPath = require('fs-path');
+const scheduler = 'twitter.js';
 
 const dbFile = process.env.HOME + '/db.json';
 const db = low(dbFile);
-
-const executables = {
-    twitter: __dirname + 'twitter/index.js',
-};
 
 function startTwitterAssistant() {
     const stdout = fs.openSync(process.env.HOME + '/logs/log.txt', 'a');
@@ -40,7 +35,7 @@ function startTwitterAssistant() {
         interval: config.interval,
     };
 
-    const pId = background.start('twitter/index.js', options);
+    const pId = background.start(scheduler, options);
 
     var update = db.get('config').find({id: 1}).assign({pId: pId}).write();
 
