@@ -1,4 +1,4 @@
-# Twitter Scheduler
+# Twitter Assistant
 
 *A CLI tool for scheduling tweets for Twitter. A background process checks a local JSON file for scheduled Tweets according to a set interval*
 
